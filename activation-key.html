@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Activation Website</title>
+    <style>
+        /* Hình nền thay đổi theo thời gian */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: rgba(255, 255, 255, 0.8); /* Đặt nền trắng mờ để nội dung dễ đọc */
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+
+        #key {
+            font-size: 1.2rem;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+            background-color: #333;
+            color: #fff;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #555;
+        }
+
+        #datetime {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            animation: glow 1s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { text-shadow: 0 0 10px #fff, 0 0 20px #fff; }
+            to { text-shadow: 0 0 20px #ff9800, 0 0 30px #ff9800; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Activation Key</h1>
+        <div id="key">XXXX-XXXX-XXXX-XXXX</div>
+        <button onclick="copyKey()">Copy Key</button>
+        <div id="datetime"></div>
+    </div>
+
+    <script>
+        // Vô hiệu hóa chuột phải và các tổ hợp phím phổ biến
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        document.addEventListener('keydown', function(e) {
+            // Ngăn tổ hợp phím F12 (DevTools), Ctrl+Shift+I (DevTools), và Ctrl+U (Xem nguồn trang)
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i') || e.key === 'F12' || (e.ctrlKey && e.key === 'U')) {
+                e.preventDefault();
+            }
+        });
+
+        // Lưu trữ ngày trong LocalStorage
+        function checkAndResetIfNewDay() {
+            const today = new Date().toDateString(); // Chỉ lưu phần ngày
+            const storedDate = localStorage.getItem('lastVisitDate');
+
+            // Kiểm tra nếu ngày đã thay đổi
+            if (storedDate !== today) {
+                localStorage.setItem('lastVisitDate', today);
+                location.reload(); // Làm mới trang nếu ngày thay đổi
+            }
+        }
+
+        // Hàm băm đơn giản tạo ra key có thể dự đoán được dựa trên ngày
+        function generateKeyForDate(date) {
+            const baseString = 'MYSECRETSTRING';  // Chuỗi định trước
+            const dateString = date.toISOString().slice(0, 10);  // YYYY-MM-DD
+            let hash = 0;
+
+            // Tạo hash từ baseString và dateString
+            for (let i = 0; i < baseString.length; i++) {
+                hash = (hash << 5) - hash + baseString.charCodeAt(i);
+                hash |= 0;  // Chuyển đổi thành 32-bit integer
+            }
+            for (let i = 0; i < dateString.length; i++) {
+                hash = (hash << 5) - hash + dateString.charCodeAt(i);
+                hash |= 0;  // Chuyển đổi thành 32-bit integer
+            }
+
+            // Chuyển đổi hash thành dạng key
+            let key = Math.abs(hash).toString(16).padStart(16, '0').toUpperCase();
+            return `${key.slice(0, 4)}-${key.slice(4, 8)}-${key.slice(8, 12)}-${key.slice(12, 16)}`;
+        }
+
+        // Hàm để cập nhật hình nền theo thời gian trong ngày
+        function updateBackground() {
+            const now = new Date();
+            const hours = now.getHours();
+            let imageUrl = '';
+
+            if (hours >= 6 && hours < 12) {
+                // Buổi sáng
+                imageUrl = 'https://hoanghamobile.com/tin-tuc/wp-content/uploads/2024/07/anh-phong-canh-anime-7.jpg';  // Đường dẫn đến hình nền buổi sáng
+            } else if (hours >= 12 && hours < 18) {
+                // Buổi chiều
+                imageUrl = 'https://png.pngtree.com/thumb_back/fw800/background/20220915/pngtree-anime-evening-clouds-water-heaven-light-photo-image_48720306.jpg';  // Đường dẫn đến hình nền buổi chiều
+            } else {
+                // Buổi tối
+                imageUrl = 'https://i.pinimg.com/originals/14/21/9a/14219af674318e6c0320ec916449b79f.jpg';  // Đường dẫn đến hình nền buổi tối
+            }
+
+            document.body.style.backgroundImage = `url('${imageUrl}')`;
+        }
+
+        // Kiểm tra và làm mới trang nếu là ngày mới
+        checkAndResetIfNewDay();
+
+        // Hiển thị key cho ngày hiện tại
+        const today = new Date();
+        document.getElementById('key').textContent = generateKeyForDate(today);
+
+        // Sao chép key
+        function copyKey() {
+            const key = document.getElementById('key').textContent;
+            navigator.clipboard.writeText(key).then(() => {
+                alert('Key copied to clipboard!');
+            });
+        }
+
+        // Cập nhật ngày giờ
+        function updateTime() {
+            const now = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
+            document.getElementById('datetime').textContent = now.toLocaleDateString('en-US', options);
+        }
+
+        setInterval(updateTime, 1000);
+
+        // Cập nhật hình nền khi trang được tải
+        updateBackground();
+    </script>
+</body>
+</html>
